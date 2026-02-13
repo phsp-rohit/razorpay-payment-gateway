@@ -2,55 +2,67 @@
 
   if (window.RazorpayGateway) return;
 
-  console.log("Razorpay SDK Loaded");
+  console.log("Universal Razorpay Gateway Loaded");
 
   window.RazorpayGateway = {
 
-    startPayment: async function(config) {
+    startPayment: async function (config) {
 
       try {
 
-        const backendUrl = config.backendUrl || "http://localhost:4343";
+        if (!config.amount)
+          throw new Error("Amount required");
 
-        /* CREATE ORDER */
+        if (!config.projectId)
+          throw new Error("ProjectId required");
 
-        const res = await fetch(backendUrl + "/create-order", {
 
-          method: "POST",
+        const backendUrl =
+          config.backendUrl ||
+          window.location.origin;
 
-          headers: {
-            "Content-Type": "application/json"
-          },
 
-          body: JSON.stringify({
-            amount: config.amount
-          })
+        /*
+        ==========================
+        CREATE ORDER
+        ==========================
+        */
 
-        });
+        const res = await fetch(
+          backendUrl + "/create-order",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+
+              amount: config.amount,
+
+              projectId: config.projectId,
+
+              name: config.name,
+
+              email: config.email,
+
+              description: config.description
+
+            })
+          }
+        );
+
 
         const data = await res.json();
 
-        if (!data.orderId) {
+        if (!data.success)
+          throw new Error(data.error || "Order failed");
 
-          alert("Order creation failed");
 
-          console.error(data);
-
-          return;
-
-        }
-
-        /* CHECK RAZORPAY LOADED */
-
-        if (!window.Razorpay) {
-
-          alert("Razorpay SDK not loaded");
-
-          return;
-
-        }
-
-        /* OPTIONS */
+        /*
+        ==========================
+        RAZORPAY OPTIONS
+        ==========================
+        */
 
         const options = {
 
@@ -66,17 +78,99 @@
 
           order_id: data.orderId,
 
-          handler: function () {
 
-            window.location.href = config.successUrl;
+          /*
+          ==========================
+          SUCCESS HANDLER
+          ==========================
+          */
+
+          handler: async function (response) {
+
+            try {
+
+              await fetch(
+                backendUrl + "/verify-payment",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type":
+                    "application/json"
+                  },
+                  body: JSON.stringify({
+
+                    razorpay_order_id:
+                    response.razorpay_order_id,
+
+                    razorpay_payment_id:
+                    response.razorpay_payment_id,
+
+                    razorpay_signature:
+                    response.razorpay_signature,
+
+                    projectId:
+                    config.projectId,
+
+                    amount:
+                    config.amount,
+
+                    name:
+                    config.name,
+
+                    email:
+                    config.email,
+
+                    description:
+                    config.description
+
+                  })
+                }
+              );
+
+
+              console.log("Payment verified");
+
+
+              if (config.successUrl) {
+
+                window.location.href =
+                  config.successUrl +
+                  "?payment_id=" +
+                  response.razorpay_payment_id;
+
+              }
+
+            }
+            catch (err) {
+
+              console.error(err);
+
+              alert("Verification failed");
+
+            }
 
           },
+
+
+          /*
+          ==========================
+          CANCEL HANDLER
+          ==========================
+          */
 
           modal: {
 
             ondismiss: function () {
 
-              window.location.href = config.cancelUrl;
+              console.log("Payment cancelled");
+
+              if (config.cancelUrl) {
+
+                window.location.href =
+                  config.cancelUrl +
+                  "?reason=cancelled";
+
+              }
 
             }
 
@@ -84,16 +178,48 @@
 
         };
 
-        const rzp = new Razorpay(options);
+
+        const rzp =
+          new Razorpay(options);
+
+
+        /*
+        ==========================
+        PAYMENT FAILED HANDLER
+        ==========================
+        */
+
+        rzp.on("payment.failed",
+        function () {
+
+          console.log("Payment failed");
+
+          if (config.cancelUrl) {
+
+            window.location.href =
+              config.cancelUrl +
+              "?reason=failed";
+
+          }
+
+        });
+
+
+        /*
+        ==========================
+        OPEN PAYMENT WINDOW
+        ==========================
+        */
 
         rzp.open();
+
 
       }
       catch (err) {
 
         console.error(err);
 
-        alert("Payment failed");
+        alert(err.message);
 
       }
 

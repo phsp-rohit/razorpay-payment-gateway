@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Payment Success</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:linear-gradient(135deg,#2ecc71,#27ae60);
+height:100vh;
+display:flex;
+justify-content:center;
+align-items:center;
+margin:0;
+}
+
+.card{
+background:white;
+padding:40px;
+border-radius:10px;
+text-align:center;
+width:350px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="card">
+
+<h2>Payment Successful</h2>
+
+<p id="paymentId"></p>
+
+<button onclick="goHome()">Home</button>
+
+</div>
+
+<script>
+
+const params =
+new URLSearchParams(window.location.search);
+
+const paymentId =
+params.get("payment_id");
+
+
+/*
+================================
+PROFESSIONAL SECURITY CHECK
+================================
+*/
+
+if(!paymentId){
+
+window.location.href="/";
+
+}
+
+
+/*
+================================
+SHOW PAYMENT INFO
+================================
+*/
+
+document.getElementById("paymentId").innerText =
+"Payment ID: " + paymentId;
+
+
+function goHome(){
+
+window.location.href="/";
+
+}
+
+</script>
+
+</body>
+</html>

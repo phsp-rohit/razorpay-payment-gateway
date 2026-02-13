@@ -1,13 +1,24 @@
-module.exports = {
+/*
+========================================
+Automatic project support for ALL students
+No manual project registration required
+========================================
+*/
 
-  flask_course: {
+module.exports = new Proxy({}, {
 
-    name: "Flask Course",
+  get: function(target, projectId) {
 
-    allowedAmounts: [100, 200, 500],
+    return {
 
-    currency: "INR"
+      name: projectId,
+
+      description: "Student Project Payment",
+
+      active: true
+
+    };
 
   }
 
-};
+});

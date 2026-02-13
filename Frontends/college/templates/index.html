@@ -1,125 +1,105 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<head>
+    <title>College Fees</title>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="http://localhost:5000/sdk/razorpay-sdk.js"></script>
 
-<title>College Fees</title>
+    <style>
+      body {
+        font-family: Arial;
+        background: linear-gradient(135deg, #11998e, #38ef7d);
+        margin: 0;
+      }
 
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script src="http://localhost:5000/sdk/razorpay-sdk.js"></script>
+      .container {
+        max-width: 600px;
+        margin: auto;
+        padding: 30px;
+      }
 
-<style>
+      .card {
+        background: white;
+        padding: 20px;
+        margin-bottom: 15px;
+        border-radius: 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
 
-body {
-  font-family: Arial;
-  background: linear-gradient(135deg,#11998e,#38ef7d);
-  margin: 0;
-}
+      button {
+        background: #3399cc;
+        border: none;
+        color: white;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+      }
 
-.container {
-  max-width: 600px;
-  margin: auto;
-  padding: 30px;
-}
+      button:hover {
+        background: #287ca1;
+      }
+    </style>
+  </head>
 
-.card {
-  background: white;
-  padding: 20px;
-  margin-bottom: 15px;
-  border-radius: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+  <body>
+    <div class="container">
+      <h2 style="color: white; text-align: center">College Fee Payment</h2>
 
-button {
-  background: #3399cc;
-  border: none;
-  color: white;
-  padding: 8px 15px;
-  border-radius: 5px;
-  cursor: pointer;
-}
+      {% for fee in fees %}
 
-button:hover {
-  background: #287ca1;
-}
+      <div class="card">
+        <div>
+          <b>{{ fee.type }}</b>
 
-</style>
+          <br />
 
-</head>
+          ₹{{ fee.amount }}
+        </div>
 
-<body>
+        <!-- FIXED BUTTON -->
+        <button
+          data-type="{{ fee.type }}"
+          data-amount="{{ fee.amount }}"
+          onclick="pay(this)"
+        >
+          Pay
+        </button>
+      </div>
 
-<div class="container">
+      {% endfor %}
+    </div>
 
-<h2 style="color:white;text-align:center;">
-College Fee Payment
-</h2>
+    <script>
+      /* SAFE PAYMENT FUNCTION */
 
-{% for fee in fees %}
+      function pay(button) {
+        const type = button.dataset.type;
+        const amount = Number(button.dataset.amount);
 
-<div class="card">
+        RazorpayGateway.startPayment({
+          amount: amount,
 
-<div>
+          projectId: "college_fee",
 
-<b>{{ fee.type }}</b>
+          name: "Student",
 
-<br>
+          email: "student@email.com",
 
-₹{{ fee.amount }}
+          description: type,
 
-</div>
+          backendUrl: "http://localhost:5000",
 
-<!-- FIXED BUTTON -->
-<button
-  data-type="{{ fee.type }}"
-  data-amount="{{ fee.amount }}"
-  onclick="pay(this)">
-Pay
-</button>
+          successUrl: window.location.href,
 
-</div>
-
-{% endfor %}
-
-</div>
-
-<script>
-
-/* SAFE PAYMENT FUNCTION */
-
-function pay(button) {
-
-  const type = button.dataset.type;
-  const amount = Number(button.dataset.amount);
-
-  RazorpayGateway.startPayment({
-
-    amount: amount,
-
-    projectId: "college_fee",
-
-    name: "Student",
-
-    email: "student@email.com",
-
-    description: type,
-
-    backendUrl: "http://localhost:5000",
-
-    successUrl: window.location.href,
-
-    cancelUrl: window.location.href
-
-  });
-
-}
-
-</script>
-
-</body>
+          cancelUrl: window.location.href,
+        });
+      }
+    </script>
+  </body>
 </html>

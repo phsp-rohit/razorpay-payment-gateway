@@ -1,138 +1,120 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-<head>
+    <title>Ecommerce Store</title>
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="http://localhost:5000/sdk/razorpay-sdk.js"></script>
 
-<title>Ecommerce Store</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Arial;
+        background: linear-gradient(135deg, #667eea, #764ba2);
+      }
 
-<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-<script src="http://localhost:5000/sdk/razorpay-sdk.js"></script>
+      .container {
+        max-width: 900px;
+        margin: auto;
+        padding: 30px;
+      }
 
-<style>
+      .title {
+        color: white;
+        text-align: center;
+        margin-bottom: 30px;
+      }
 
-body {
-  margin: 0;
-  font-family: Arial;
-  background: linear-gradient(135deg,#667eea,#764ba2);
-}
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+      }
 
-.container {
-  max-width: 900px;
-  margin: auto;
-  padding: 30px;
-}
+      .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      }
 
-.title {
-  color: white;
-  text-align: center;
-  margin-bottom: 30px;
-}
+      .price {
+        color: green;
+        font-size: 22px;
+        margin: 10px 0;
+      }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit,minmax(250px,1fr));
-  gap: 20px;
-}
+      button {
+        background: #3399cc;
+        color: white;
+        border: none;
+        padding: 10px;
+        width: 100%;
+        border-radius: 6px;
+        cursor: pointer;
+      }
 
-.card {
-  background: white;
-  padding: 20px;
-  border-radius: 10px;
-  text-align: center;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-}
+      button:hover {
+        background: #287ca1;
+      }
+    </style>
+  </head>
 
-.price {
-  color: green;
-  font-size: 22px;
-  margin: 10px 0;
-}
+  <body>
+    <div class="container">
+      <h1 class="title">Ecommerce Store</h1>
 
-button {
-  background: #3399cc;
-  color: white;
-  border: none;
-  padding: 10px;
-  width: 100%;
-  border-radius: 6px;
-  cursor: pointer;
-}
+      <div class="grid">
+        {% for product in products %}
 
-button:hover {
-  background: #287ca1;
-}
+        <div class="card">
+          <h3>{{ product.name }}</h3>
 
-</style>
+          <div class="price">₹{{ product.price }}</div>
 
-</head>
+          <!-- FIXED BUTTON -->
+          <button
+            data-name="{{ product.name }}"
+            data-price="{{ product.price }}"
+            onclick="pay(this)"
+          >
+            Buy Now
+          </button>
+        </div>
 
-<body>
+        {% endfor %}
+      </div>
+    </div>
 
-<div class="container">
+    <script>
+      /* SAFE PAYMENT FUNCTION */
 
-<h1 class="title">Ecommerce Store</h1>
+      function pay(button) {
+        const name = button.dataset.name;
+        const price = Number(button.dataset.price);
 
-<div class="grid">
+        RazorpayGateway.startPayment({
+          amount: price,
 
-{% for product in products %}
+          projectId: "ecommerce_store",
 
-<div class="card">
+          name: "Customer",
 
-<h3>{{ product.name }}</h3>
+          email: "customer@email.com",
 
-<div class="price">₹{{ product.price }}</div>
+          description: name,
 
-<!-- FIXED BUTTON -->
-<button
-  data-name="{{ product.name }}"
-  data-price="{{ product.price }}"
-  onclick="pay(this)">
-Buy Now
-</button>
+          backendUrl: "http://localhost:5000",
 
-</div>
+          successUrl: window.location.href,
 
-{% endfor %}
-
-</div>
-
-</div>
-
-<script>
-
-/* SAFE PAYMENT FUNCTION */
-
-function pay(button) {
-
-  const name = button.dataset.name;
-  const price = Number(button.dataset.price);
-
-  RazorpayGateway.startPayment({
-
-    amount: price,
-
-    projectId: "ecommerce_store",
-
-    name: "Customer",
-
-    email: "customer@email.com",
-
-    description: name,
-
-    backendUrl: "http://localhost:5000",
-
-    successUrl: window.location.href,
-
-    cancelUrl: window.location.href
-
-  });
-
-}
-
-</script>
-
-</body>
+          cancelUrl: window.location.href,
+        });
+      }
+    </script>
+  </body>
 </html>

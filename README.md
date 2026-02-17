@@ -282,7 +282,171 @@ Example production SDK usage:
 
 ---
 
+# 🚀 Razorpay Backend – Docker Setup Guide
+
+This guide explains how to create and run the backend inside a Docker container.
+
+------------------------------------------------------------
+✅ PREREQUISITES
+------------------------------------------------------------
+
+1. Install Docker Desktop (Windows/Mac)
+   OR
+   Install Docker Engine (Ubuntu)
+
+Check installation:
+
+    docker --version
+    docker info
+
+------------------------------------------------------------
+📁 STEP 1 — Go to Backend Folder
+------------------------------------------------------------
+
+Open terminal inside backend folder:
+
+    cd razorpay-payment-gateway/backend
+
+Make sure you see:
+
+    package.json
+    server.js
+
+------------------------------------------------------------
+📝 STEP 2 — Create Dockerfile
+------------------------------------------------------------
+
+Create a file named:
+
+    Dockerfile
+
+Add this content inside it:
+
+------------------------------------------------------------
+
+FROM node:18
+
+WORKDIR /app
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+EXPOSE 5000
+
+CMD ["node", "server.js"]
+
+------------------------------------------------------------
+
+⚠ If your main file is app.js, replace:
+
+    "server.js"
+
+with:
+
+    "app.js"
+
+------------------------------------------------------------
+🏗 STEP 3 — Build Docker Image
+------------------------------------------------------------
+
+Run this command inside backend folder:
+
+    docker build -t razorpay-backend .
+
+After build completes, check:
+
+    docker images
+
+You should see:
+
+    razorpay-backend   latest
+
+------------------------------------------------------------
+▶ STEP 4 — Run Docker Container
+------------------------------------------------------------
+
+Run:
+
+    docker run -d -p 5000:5000 --name razorpay-container razorpay-backend
+
+Explanation:
+    -d                 → Run in background
+    -p 5000:5000       → Map port 5000
+    --name             → Container name
+
+------------------------------------------------------------
+✅ STEP 5 — Check Container
+------------------------------------------------------------
+
+Check running containers:
+
+    docker ps
+
+If running, open in browser:
+
+    http://localhost:5000
+
+If on server:
+
+    http://SERVER_IP:5000
+
+------------------------------------------------------------
+🛑 Docker Management Commands
+------------------------------------------------------------
+
+Stop container:
+
+    docker stop razorpay-container
+
+Start container:
+
+    docker start razorpay-container
+
+Remove container:
+
+    docker rm razorpay-container
+
+Remove image:
+
+    docker rmi razorpay-backend
+
+------------------------------------------------------------
+🌐 How To Use Backend
+------------------------------------------------------------
+
+If frontend is local:
+
+Replace:
+
+    http://localhost:5000
+
+With:
+
+    http://SERVER_IP:5000
+
+Now frontend will communicate with Docker backend.
+
+------------------------------------------------------------
+🎯 Result
+------------------------------------------------------------
+
+✔ Backend running inside Docker
+✔ No need to install Node on server
+✔ Ready for Ubuntu deployment
+✔ Production friendly setup
+
+------------------------------------------------------------
+END OF GUIDE
+------------------------------------------------------------
+
+
+---
+
 # Author
+
 
 **Rohit Lakha**
 

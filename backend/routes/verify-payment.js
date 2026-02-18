@@ -9,7 +9,6 @@ const router = express.Router();
 /*
 ========================================
 Ensure logs directory exists
-(Render safe)
 ========================================
 */
 
@@ -18,13 +17,8 @@ const logDir = path.join(__dirname, "../logs");
 try {
 
   if (!fs.existsSync(logDir)) {
-
-    fs.mkdirSync(logDir, {
-      recursive: true
-    });
-
+    fs.mkdirSync(logDir, { recursive: true });
     console.log("Logs directory created");
-
   }
 
 } catch (err) {
@@ -34,7 +28,6 @@ try {
 }
 
 const logFile = path.join(logDir, "payments.log");
-
 
 /*
 ========================================
@@ -56,74 +49,73 @@ router.post("/", (req, res) => {
       amount,
       name,
       email,
+      phone,          // ✅ Added (optional)
       description
 
     } = req.body;
 
-
     /*
     ========================================
-    Validate required fields
+    Validate Required Razorpay Fields
     ========================================
     */
 
     if (
-
       !razorpay_order_id ||
       !razorpay_payment_id ||
       !razorpay_signature
-
     ) {
 
       console.warn("Missing payment fields");
 
       return res.status(400).json({
-
         success: false,
         error: "Missing payment data"
-
       });
 
     }
 
-
     /*
     ========================================
-    Verify Razorpay signature
+    Verify Razorpay Signature
     ========================================
     */
 
     const isValid = verifySignature({
-
       orderId: razorpay_order_id,
-
       paymentId: razorpay_payment_id,
-
       signature: razorpay_signature
-
     });
-
 
     if (!isValid) {
 
-      console.warn(
-        "Invalid signature:",
-        razorpay_order_id
-      );
+      console.warn("Invalid signature:", razorpay_order_id);
 
       return res.status(400).json({
-
         success: false,
         error: "Invalid signature"
-
       });
 
     }
 
+    /*
+    ========================================
+    Optional Phone Validation
+    ========================================
+    */
+
+    let cleanPhone = "unknown";
+
+    if (phone) {
+      const phoneRegex = /^[6-9]\d{9}$/;
+      if (phoneRegex.test(phone)) {
+        cleanPhone = phone;
+      }
+    }
 
     /*
     ========================================
-    Prepare log entry
+    Prepare Log Entry
     ========================================
     */
 
@@ -132,38 +124,34 @@ router.post("/", (req, res) => {
       time: new Date().toISOString(),
 
       order_id: razorpay_order_id,
-
       payment_id: razorpay_payment_id,
 
       project: projectId || "unknown",
-
       amount: amount || 0,
 
       customer: name || "unknown",
-
       email: email || "unknown",
+      phone: cleanPhone,      // ✅ Logged here
 
       description: description || "payment",
 
-      ip: req.headers["x-forwarded-for"] || req.ip
+      ip:
+        req.headers["x-forwarded-for"] ||
+        req.ip
 
     };
 
-
     /*
     ========================================
-    Write to file
+    Write To File
     ========================================
     */
 
     try {
 
       fs.appendFileSync(
-
         logFile,
-
         JSON.stringify(logEntry) + "\n"
-
       );
 
     } catch (err) {
@@ -172,10 +160,9 @@ router.post("/", (req, res) => {
 
     }
 
-
     /*
     ========================================
-    Console log (VISIBLE ON RENDER)
+    Console Log
     ========================================
     */
 
@@ -184,7 +171,6 @@ router.post("/", (req, res) => {
     console.log(logEntry);
     console.log("=================================");
 
-
     /*
     ========================================
     Response
@@ -192,13 +178,9 @@ router.post("/", (req, res) => {
     */
 
     res.json({
-
       success: true,
-
       message: "Payment verified",
-
       order_id: razorpay_order_id
-
     });
 
   }
@@ -207,16 +189,12 @@ router.post("/", (req, res) => {
     console.error("Verification error:", err);
 
     res.status(500).json({
-
       success: false,
-
       error: "Verification failed"
-
     });
 
   }
 
 });
-
 
 module.exports = router;

@@ -9,7 +9,6 @@ const limiter = require("./middleware/rateLimiter");
 
 const app = express();
 
-
 /*
 ========================================
 PORT & BASE URL
@@ -22,7 +21,6 @@ const BASE_URL =
   process.env.BASE_URL ||
   `http://localhost:${PORT}`;
 
-
 /*
 ========================================
 Trust proxy (REQUIRED for Render)
@@ -31,7 +29,6 @@ Trust proxy (REQUIRED for Render)
 
 app.set("trust proxy", 1);
 
-
 /*
 ========================================
 Hide Express fingerprint
@@ -39,7 +36,6 @@ Hide Express fingerprint
 */
 
 app.disable("x-powered-by");
-
 
 /*
 ========================================
@@ -57,25 +53,19 @@ app.use(
   })
 );
 
-
 /*
 ========================================
 Dynamic CORS configuration
-Supports ALL student projects
 ========================================
 */
 
 app.use(
   cors({
+    origin: function (origin, callback) {
 
-    origin: function(origin, callback) {
-
-      /* Allow Postman / mobile */
       if (!origin)
         return callback(null, true);
 
-
-      /* Allow ALL localhost ports */
       if (
         origin.startsWith("http://localhost:") ||
         origin.startsWith("http://127.0.0.1:")
@@ -83,8 +73,6 @@ app.use(
         return callback(null, true);
       }
 
-
-      /* Allow Render frontend */
       if (
         origin.includes("onrender.com") ||
         origin === process.env.FRONTEND_URL
@@ -92,25 +80,14 @@ app.use(
         return callback(null, true);
       }
 
-
       console.warn("Blocked by CORS:", origin);
-
       return callback(null, false);
-
     },
-
     methods: ["GET", "POST", "OPTIONS"],
-
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization"
-    ],
-
+    allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true
-
   })
 );
-
 
 /*
 ========================================
@@ -120,7 +97,6 @@ Rate limiter
 
 app.use(limiter);
 
-
 /*
 ========================================
 JSON parser
@@ -128,7 +104,6 @@ JSON parser
 */
 
 app.use(express.json());
-
 
 /*
 ========================================
@@ -149,7 +124,6 @@ app.use((req, res, next) => {
 
 });
 
-
 /*
 ========================================
 Serve SDK
@@ -162,7 +136,6 @@ app.use(
     path.join(__dirname, "public")
   )
 );
-
 
 /*
 ========================================
@@ -180,7 +153,6 @@ app.use(
   require("./routes/verify-payment")
 );
 
-
 /*
 ========================================
 Health check
@@ -190,22 +162,14 @@ Health check
 app.get("/", (req, res) => {
 
   res.json({
-
     status: "Gateway Running",
-
-    version: "1.0.0",
-
-    sdk:
-      BASE_URL +
-      "/sdk/razorpay-sdk.js",
-
-    time:
-      new Date()
-
+    version: "1.1.0",
+    sdk: BASE_URL + "/sdk/razorpay-sdk.js",
+    environment: process.env.NODE_ENV || "development",
+    time: new Date()
   });
 
 });
-
 
 /*
 ========================================
@@ -213,26 +177,16 @@ Global error handler
 ========================================
 */
 
-app.use(
-  (err, req, res, next) => {
+app.use((err, req, res, next) => {
 
-    console.error(
-      "Server Error:",
-      err
-    );
+  console.error("Server Error:", err);
 
-    res.status(500).json({
+  res.status(500).json({
+    success: false,
+    error: "Internal server error"
+  });
 
-      success: false,
-
-      error:
-        "Internal server error"
-
-    });
-
-  }
-);
-
+});
 
 /*
 ========================================
@@ -242,29 +196,10 @@ Start server
 
 app.listen(PORT, () => {
 
-  console.log(
-    "================================="
-  );
-
-  console.log(
-    "Gateway running on:",
-    BASE_URL
-  );
-
-  console.log(
-    "SDK URL:",
-    BASE_URL +
-    "/sdk/razorpay-sdk.js"
-  );
-
-  console.log(
-    "Environment:",
-    process.env.NODE_ENV ||
-    "development"
-  );
-
-  console.log(
-    "================================="
-  );
+  console.log("=================================");
+  console.log("Gateway running on:", BASE_URL);
+  console.log("SDK URL:", BASE_URL + "/sdk/razorpay-sdk.js");
+  console.log("Environment:", process.env.NODE_ENV || "development");
+  console.log("=================================");
 
 });

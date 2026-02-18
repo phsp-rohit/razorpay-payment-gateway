@@ -16,11 +16,9 @@
         if (!config.projectId)
           throw new Error("ProjectId required");
 
-
         const backendUrl =
           config.backendUrl ||
           window.location.origin;
-
 
         /*
         ==========================
@@ -38,25 +36,20 @@
             body: JSON.stringify({
 
               amount: config.amount,
-
               projectId: config.projectId,
-
               name: config.name,
-
               email: config.email,
-
+              phone: config.phone || null, // ✅ optional
               description: config.description
 
             })
           }
         );
 
-
         const data = await res.json();
 
         if (!data.success)
           throw new Error(data.error || "Order failed");
-
 
         /*
         ==========================
@@ -67,17 +60,18 @@
         const options = {
 
           key: data.key,
-
           amount: data.amount,
-
           currency: data.currency,
-
           name: data.name,
-
           description: data.description,
-
           order_id: data.orderId,
 
+          // ✅ Prefill (phone optional)
+          prefill: {
+            name: config.name || "",
+            email: config.email || "",
+            contact: config.phone || ""
+          },
 
           /*
           ==========================
@@ -94,42 +88,42 @@
                 {
                   method: "POST",
                   headers: {
-                    "Content-Type":
-                    "application/json"
+                    "Content-Type": "application/json"
                   },
                   body: JSON.stringify({
 
                     razorpay_order_id:
-                    response.razorpay_order_id,
+                      response.razorpay_order_id,
 
                     razorpay_payment_id:
-                    response.razorpay_payment_id,
+                      response.razorpay_payment_id,
 
                     razorpay_signature:
-                    response.razorpay_signature,
+                      response.razorpay_signature,
 
                     projectId:
-                    config.projectId,
+                      config.projectId,
 
                     amount:
-                    config.amount,
+                      config.amount,
 
                     name:
-                    config.name,
+                      config.name,
 
                     email:
-                    config.email,
+                      config.email,
+
+                    phone:
+                      config.phone || null, // ✅ added here also
 
                     description:
-                    config.description
+                      config.description
 
                   })
                 }
               );
 
-
               console.log("Payment verified");
-
 
               if (config.successUrl) {
 
@@ -144,13 +138,11 @@
             catch (err) {
 
               console.error(err);
-
               alert("Verification failed");
 
             }
 
           },
-
 
           /*
           ==========================
@@ -178,10 +170,7 @@
 
         };
 
-
-        const rzp =
-          new Razorpay(options);
-
+        const rzp = new Razorpay(options);
 
         /*
         ==========================
@@ -190,20 +179,19 @@
         */
 
         rzp.on("payment.failed",
-        function () {
+          function () {
 
-          console.log("Payment failed");
+            console.log("Payment failed");
 
-          if (config.cancelUrl) {
+            if (config.cancelUrl) {
 
-            window.location.href =
-              config.cancelUrl +
-              "?reason=failed";
+              window.location.href =
+                config.cancelUrl +
+                "?reason=failed";
 
-          }
+            }
 
-        });
-
+          });
 
         /*
         ==========================
@@ -213,12 +201,10 @@
 
         rzp.open();
 
-
       }
       catch (err) {
 
         console.error(err);
-
         alert(err.message);
 
       }

@@ -4,62 +4,84 @@ const Razorpay = require("razorpay");
 const router = express.Router();
 
 const allowedProjects =
-require("../config/projects");
-
+  require("../config/projects");
 
 const razorpay = new Razorpay({
-
   key_id: process.env.RAZORPAY_KEY_ID,
-
   key_secret: process.env.RAZORPAY_KEY_SECRET
-
 });
-
 
 router.post("/", async (req, res) => {
 
   try {
 
     const {
-
       amount,
       projectId,
       name,
       email,
+      phone,          // ✅ Added (optional)
       description
-
     } = req.body;
 
+    /*
+    ========================================
+    Validate Project
+    ========================================
+    */
 
-    /* Validate amount */
+    if (!projectId || !allowedProjects[projectId]) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid project"
+      });
+    }
+
+    const project = allowedProjects[projectId];
+
+    /*
+    ========================================
+    Validate Amount
+    ========================================
+    */
 
     const parsedAmount = Number(amount);
 
     if (
-
       isNaN(parsedAmount) ||
       parsedAmount < 1 ||
       parsedAmount > 1000000
-
     ) {
-
       return res.status(400).json({
-
         success: false,
         error: "Invalid amount"
-
       });
-
     }
 
+    /*
+    ========================================
+    Validate Phone (Optional)
+    ========================================
+    */
 
-    /* Get project automatically */
+    let cleanPhone = null;
 
-    const project =
-      allowedProjects[projectId];
+    if (phone) {
+      const phoneRegex = /^[6-9]\d{9}$/; // Indian mobile validation
+      if (!phoneRegex.test(phone)) {
+        return res.status(400).json({
+          success: false,
+          error: "Invalid phone number"
+        });
+      }
+      cleanPhone = phone;
+    }
 
-
-    /* LOG request (IMPORTANT) */
+    /*
+    ========================================
+    LOG Request (Important)
+    ========================================
+    */
 
     console.log("=================================");
     console.log("New Payment Request");
@@ -67,18 +89,20 @@ router.post("/", async (req, res) => {
     console.log("Amount:", parsedAmount);
     console.log("Name:", name);
     console.log("Email:", email);
+    console.log("Phone:", cleanPhone);
     console.log("IP:", req.ip);
     console.log("=================================");
 
-
-    /* Create Razorpay order */
+    /*
+    ========================================
+    Create Razorpay Order
+    ========================================
+    */
 
     const order =
       await razorpay.orders.create({
 
-        amount:
-          parsedAmount * 100,
-
+        amount: parsedAmount * 100, // paisa
         currency: "INR",
 
         receipt:
@@ -88,53 +112,37 @@ router.post("/", async (req, res) => {
           Date.now(),
 
         notes: {
-
           projectId,
-          customerName: name,
-          customerEmail: email,
-          description
-
+          customerName: name || "",
+          customerEmail: email || "",
+          customerPhone: cleanPhone || "",
+          description: description || ""
         }
 
       });
 
-
     res.json({
-
       success: true,
-
       orderId: order.id,
-
       amount: order.amount,
-
       currency: order.currency,
-
       key: process.env.RAZORPAY_KEY_ID,
-
       name: project.name,
-
-      description: description
-
+      description: description || ""
     });
 
   }
   catch (err) {
 
-    console.error(
-      "Create order error:",
-      err
-    );
+    console.error("Create order error:", err);
 
     res.status(500).json({
-
       success: false,
       error: "Order creation failed"
-
     });
 
   }
 
 });
-
 
 module.exports = router;

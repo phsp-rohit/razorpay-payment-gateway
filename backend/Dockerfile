@@ -27,4 +27,5 @@ COPY --from=builder /app ./
 EXPOSE 5000
 
 # Run the server
-CMD ["node", "index.js"]
+CMD ["node", "server.js"]
+
